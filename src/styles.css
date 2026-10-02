@@ -30,3 +30,41 @@
   .aside-title{flex-direction:column;align-items:flex-start;gap:12px}
   .aside-title h2{white-space:nowrap;font-size:clamp(20px,5.5vw,22px)}
 }
+
+/* Roadmap: seasonal production timeline. */
+.roadmap-page{max-width:1040px}
+.roadmap-page svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.roadmap-symbols{position:absolute;width:0;height:0;overflow:hidden}
+.roadmap-overview{margin:0 0 32px;padding:22px 24px;display:flex;align-items:center;gap:24px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(110deg,#26301e,#1b1e1a)}
+.roadmap-overview>svg{width:38px;height:38px;flex-shrink:0;color:var(--lime)}
+.roadmap-overview span{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
+.roadmap-overview strong{font-size:25px;font-weight:500}
+.roadmap-period{margin-left:auto;text-align:right;color:var(--muted);font-size:13px;line-height:1.6}
+.roadmap-timeline{display:grid;grid-template-columns:1fr 1fr;gap:24px;list-style:none;padding:0;margin:0;position:relative}
+.roadmap-stage{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:28px;min-width:0}
+.roadmap-stage-top{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.roadmap-season{display:flex;align-items:center;gap:12px}
+.roadmap-season svg{width:44px;height:44px;flex-shrink:0;padding:10px;border-radius:11px;background:#30291c;color:#e9bf72}
+.roadmap-winter .roadmap-season svg{background:#203039;color:#a1d7f6}
+.roadmap-shooting .roadmap-season svg{background:#2b351e;color:var(--lime)}
+.roadmap-release .roadmap-season svg{background:var(--lime);color:#14200c}
+.roadmap-season span{font-size:15px;font-weight:700;line-height:1.5}
+.roadmap-step{font-size:12px;color:#79866b;letter-spacing:2px}
+.roadmap-stage h2{margin:25px 0 13px;font-size:25px;letter-spacing:-.5px;font-weight:500;line-height:1.25}
+.roadmap-stage>p{color:var(--muted);font-size:15px;line-height:1.8;margin:0 0 24px}
+.roadmap-tags{display:flex;flex-wrap:wrap;gap:8px}
+.roadmap-tag{border:1px solid #444d3a;color:#c4d3b5;border-radius:30px;padding:7px 11px;font-size:12px}
+.roadmap-release{border-color:#6a8341;background:linear-gradient(145deg,#25301c,#1b1e1a)}
+.roadmap-release h2{color:var(--lime)}
+.roadmap-release .roadmap-tag{background:var(--lime);border-color:var(--lime);color:#18210f;font-weight:700}
+.roadmap-stage-bottom{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;line-height:1.6}
+.roadmap-stage-bottom svg{width:17px;height:17px;color:var(--lime);flex-shrink:0}
+.roadmap-footnote{font-size:13px;color:var(--muted);line-height:1.7;margin:24px 0 0}
+@media(min-width:721px) and (max-width:1250px){.header{flex-wrap:wrap;padding:23px 0;gap:20px}.nav{order:3;width:100%;justify-content:space-between;gap:18px}.nav a.active:after{bottom:-23px}}
+@media(max-width:720px){
+ .roadmap-overview{gap:14px;padding:19px}.roadmap-overview strong{font-size:22px}.roadmap-period{display:none}
+ .roadmap-timeline{grid-template-columns:1fr;gap:20px;margin-left:9px;padding-left:23px}
+ .roadmap-timeline:before{content:'';position:absolute;left:0;top:29px;bottom:29px;width:1px;background:#4c5b3e}
+ .roadmap-stage{padding:23px}.roadmap-stage:before{content:'';position:absolute;left:-29px;top:30px;width:9px;height:9px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 5px var(--bg)}
+ .roadmap-stage h2{font-size:24px}.roadmap-season span{font-size:14px}.roadmap-stage-top{gap:8px}.roadmap-footnote{margin-left:32px}
+}
