@@ -26,7 +26,9 @@ function actorAvatar(name,url){
 const date = value => new Date(value).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});
 function toast(message) { const el=document.querySelector('#toast');el.textContent=message;el.classList.add('visible');setTimeout(()=>el.classList.remove('visible'),4000); }
 function frame(page) {
+  const navScroll=document.querySelector('.nav')?.scrollLeft || 0;
   root.innerHTML=`<div class="shell">${demoMode?`<div class="demo-bar"><div><b>Локальный прототип</b><span>Тестовые данные · не канон трилогии</span></div><div class="demo-controls"><label for="demo-role">Смотреть как</label><select id="demo-role"><option value="guest" ${getDemoRole()==='guest'?'selected':''}>Гость</option><option value="actor" ${getDemoRole()==='actor'?'selected':''}>Актёр</option><option value="organizer" ${getDemoRole()==='organizer'?'selected':''}>Организатор и актёр</option></select><button id="demo-reset" type="button">Сбросить демо</button></div></div>`:''}<header class="header"><a class="brand" href="#/cast"><img src="${import.meta.env.BASE_URL}favicon.svg" alt=""><span>${e(project.title)}</span></a><nav class="nav" aria-label="Основная навигация">${navs.map(([id,label])=>`<a href="#/${id}" class="${page===id?'active':''}" ${page===id?'aria-current="page"':''}>${label}</a>`).join('')}${admin?`<a href="#/admin" ${page==='admin'?'aria-current="page"':''}>Управление</a>`:''}</nav><a class="account" href="#/${user?'profile':'login'}">${user?'Моя анкета':'Войти'}</a></header><main id="main" tabindex="-1" class="content"><div class="topline"><b>III</b><span></span>${e(project.subtitle)}</div><div id="view" aria-busy="true"><div class="loading">Загружаем…</div></div></main><footer class="footer"><span>${e(project.title)} · ${demoMode?'Демо сохраняет изменения только в этом браузере':'Собираем команду заключительного фильма'}</span><a href="#/privacy">Как используются ваши данные</a></footer></div>`;
+  document.querySelector('.nav').scrollLeft=navScroll;
 }
 async function rows(table,order='created_at') {
   if (!db) return [];
@@ -63,8 +65,7 @@ async function castPage() {
 }
 async function lorePage() {
   const chapters=await rows('lore_chapters','sort_order');
-  return 
-    (chapters.length?`<div class="lore-content">${chapters.map((c,i)=>`<article class="chapter" id="chapter-${e(c.id)}"><h2>${e(c.title)}</h2><div class="prose">${e(c.content)}</div></article>`).join('')}</div>`:`<div class="content-empty">${empty('Историю скоро добавим','Организатор опубликует пересказ прошлых частей и правила мира. Здесь будет канон трилогии, на который можно опираться в новых идеях.','I / II / III')}${admin?'<p><a class="button secondary" href="#/admin">Добавить раздел</a></p>':''}</div>`);
+  return (chapters.length?`<div class="lore-content">${chapters.map((c,i)=>`<article class="chapter" id="chapter-${e(c.id)}"><h2>${e(c.title)}</h2><div class="prose">${e(c.content)}</div></article>`).join('')}</div>`:`<div class="content-empty">${empty('Историю скоро добавим','Организатор опубликует пересказ прошлых частей и правила мира. Здесь будет канон трилогии, на который можно опираться в новых идеях.','I / II / III')}${admin?'<p><a class="button secondary" href="#/admin">Добавить раздел</a></p>':''}</div>`);
 }
 async function charactersPage() {
   const chars=await rows('characters','sort_order');
