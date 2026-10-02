@@ -8,3 +8,12 @@
 .lore-content{max-width:900px}.archive-block{display:flex;align-items:center;justify-content:space-between;gap:30px;margin-top:38px;padding-top:30px;border-top:1px solid var(--line)}.archive-block h2{font-size:24px;font-weight:500;letter-spacing:-.6px;margin:0}.archive-block img{display:block;width:437px;max-width:100%;height:auto;border-radius:8px}.topline{line-height:1.7}.topline b,.topline span{flex-shrink:0}
 @media(max-width:720px){.archive-block{flex-direction:column;align-items:start;gap:20px}.archive-block h2{font-size:22px}.topline{font-size:12px;letter-spacing:.7px}}
 .archive-previews{position:relative;width:437px;max-width:100%;flex-shrink:0}.archive-previews img{width:100%}.archive-link{position:absolute;top:0;bottom:0;width:50%;border-radius:8px;cursor:pointer}.episode-second{left:0}.episode-first{left:50%}.archive-link:hover{box-shadow:inset 0 0 0 2px var(--lime)}.archive-link:focus-visible{outline:3px solid var(--lime);outline-offset:3px}
+
+/* Confirmed casting status */
+.character .chip-cast{display:inline-flex;align-items:center;background:var(--lime);color:#18210f;border:1px solid var(--lime);font-weight:700;font-size:12px;letter-spacing:0;padding:7px 11px;line-height:1.3;white-space:nowrap;box-shadow:0 0 0 3px #c4f06414}
+.character .index{gap:12px;flex-wrap:wrap}
+
+/* Provider profile photos with initials underneath as fallback. */
+.avatar{position:relative;overflow:hidden;flex-shrink:0}
+.avatar-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.panel>.avatar{margin-top:16px}
