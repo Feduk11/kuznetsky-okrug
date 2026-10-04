@@ -14,6 +14,8 @@ export async function query(request) {
 }
 export const returnUrl = () => location.origin + location.pathname;
 export function readableError(error) {
+  if (error?.name === 'MediaError') return error.message;
+  if (error?.message?.includes('Bucket not found')) return 'Загрузка ещё не настроена. Организатору нужно выполнить SQL обновления.';
   if (error?.message?.includes('Invalid login credentials')) return 'Проверьте почту и пароль.';
   if (error?.message?.includes('Email not confirmed')) return 'Подтвердите почту по ссылке из письма.';
   if (error?.status === 429 || error?.message?.includes('rate limit')) return 'Слишком много попыток. Попробуйте немного позже.';

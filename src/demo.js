@@ -73,7 +73,11 @@ class DemoQuery{
   const table=state[this.table]||[], matches=row=>this.filters.every(([key,value])=>row[key]===value);
   let data=table.filter(matches);
   if(this.action==='insert'){const item={id:id(),created_at:new Date().toISOString(),...this.payload};if(this.table==='applications')item.status='submitted';table.push(item);data=[item];save();}
-  if(this.action==='update'){data.forEach(item=>Object.assign(item,this.payload));save();}
+  if(this.action==='update'){
+   data.forEach(item=>Object.assign(item,this.payload));
+   for(const item of data){const cast=state.cast_members.find(c=>c.user_id===(this.table==='profiles'?item.id:item.user_id));if(cast&&this.table==='profiles')cast.display_name=item.display_name;if(cast&&this.table==='applications'&&item.status==='accepted'){cast.role_name=item.role_name;cast.participation=item.participation;}}
+   save();
+  }
   if(this.action==='delete'){if(this.table==='ideas'){const removed=new Set(data.map(row=>row.id));state.idea_comments=state.idea_comments.filter(row=>!removed.has(row.idea_id));}state[this.table]=table.filter(row=>!matches(row));data=[];save();}
   data=data.map(row=>({...row}));
   if(this.columns?.includes('profiles('))data=data.map(row=>({...row,profiles:state.profiles.find(p=>p.id===row.user_id)}));
@@ -81,19 +85,33 @@ class DemoQuery{
   return {data:this.isSingle?(data[0]||null):data,error:null};
  }
 }
+const demoFiles=new Map();
+const demoStorage=bucket=>({
+ upload:async(path,file)=>{demoFiles.set(bucket+'/'+path,URL.createObjectURL(file));return {data:{path},error:null};},
+ remove:async paths=>{for(const path of paths){const key=bucket+'/'+path,url=demoFiles.get(key);if(url)URL.revokeObjectURL(url);demoFiles.delete(key);}return {data:[],error:null};},
+ getPublicUrl:path=>({data:{publicUrl:demoFiles.get(bucket+'/'+path)||''}}),
+ createSignedUrls:async paths=>({data:paths.map(path=>({path,signedUrl:demoFiles.get(bucket+'/'+path)||'',error:null})),error:null})
+});
 export const demoClient={
+ storage:{from:demoStorage},
  from:table=>new DemoQuery(table),
  auth:{
  getSession:async()=>({data:{session:currentUser()?{user:currentUser()}:null},error:null}),
  onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),
  signOut:async()=>{setDemoRole('guest');return {error:null};}
  },
- rpc:async(name,{application_id,new_status})=>{
+ rpc:async(name,{application_id,new_status,object_path})=>{
+  if(name==='set_avatar'){
+   const uid=currentUser()?.id;if(!uid||!object_path.startsWith(uid+'/'))return {data:null,error:{code:'42501'}};
+   state.profiles.find(p=>p.id===uid).avatar_path=object_path;
+   const cast=state.cast_members.find(c=>c.user_id===uid);if(cast)cast.avatar_path=object_path;
+   save();return {data:null,error:null};
+  }
   if(role!=='organizer')return {data:null,error:{code:'42501'}};
   const app=state.applications.find(a=>a.id===application_id);if(!app)return {data:null,error:{message:'Not found'}};
   app.status=new_status;
   state.cast_members=state.cast_members.filter(c=>c.user_id!==app.user_id&&!(c.id==='cast-one'&&app.user_id===actorId));
-  if(new_status==='accepted')state.cast_members.push({id:id(),user_id:app.user_id,display_name:state.profiles.find(p=>p.id===app.user_id)?.display_name||'Участник',role_name:app.role_name,participation:app.participation,created_at:new Date().toISOString()});
+  if(new_status==='accepted')state.cast_members.push({id:id(),user_id:app.user_id,display_name:state.profiles.find(p=>p.id===app.user_id)?.display_name||'Участник',avatar_path:state.profiles.find(p=>p.id===app.user_id)?.avatar_path,role_name:app.role_name,participation:app.participation,created_at:new Date().toISOString()});
   save();return {data:null,error:null};
  }
 };
