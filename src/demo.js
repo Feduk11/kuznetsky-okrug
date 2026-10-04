@@ -59,7 +59,7 @@ export function resetDemo(){state=structuredClone(initial);role='guest';save();}
 const currentUser=()=>role==='guest'?null:{id:role==='organizer'?ownerId:actorId,email:role==='organizer'?'organizer@example.test':'actor@example.test',user_metadata:{display_name:role==='organizer'?'Организатор проекта':'Алексей • тестовый актёр'}};
 const id=()=>globalThis.crypto?.randomUUID?.() || 'demo-'+Date.now()+'-'+Math.random().toString(36).slice(2);
 class DemoQuery{
- constructor(table){this.table=table;this.filters=[];this.action='select';}
+ constructor(table){this.publicProjection=['public_ideas','public_idea_comments'].includes(table);this.table=table==='public_ideas'?'ideas':table==='public_idea_comments'?'idea_comments':table;this.filters=[];this.action='select';}
  select(columns='*'){this.columns=columns;return this;}
  order(column,{ascending=true}={}){this.sort={column,ascending};return this;}
  eq(column,value){this.filters.push([column,value]);return this;}
@@ -80,7 +80,7 @@ class DemoQuery{
   }
   if(this.action==='delete'){if(this.table==='ideas'){const removed=new Set(data.map(row=>row.id));state.idea_comments=state.idea_comments.filter(row=>!removed.has(row.idea_id));}state[this.table]=table.filter(row=>!matches(row));data=[];save();}
   data=data.map(row=>({...row}));
-  if(this.columns?.includes('profiles('))data=data.map(row=>({...row,profiles:state.profiles.find(p=>p.id===row.user_id)}));
+  if(this.publicProjection||this.columns?.includes('profiles('))data=data.map(row=>({...row,profiles:state.profiles.find(p=>p.id===row.user_id)}));
   if(this.sort){const {column,ascending}=this.sort;data.sort((a,b)=>a[column]>b[column]?(ascending?1:-1):a[column]<b[column]?(ascending?-1:1):0);}
   return {data:this.isSingle?(data[0]||null):data,error:null};
  }
