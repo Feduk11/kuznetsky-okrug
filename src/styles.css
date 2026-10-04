@@ -68,3 +68,19 @@
  .roadmap-stage{padding:23px}.roadmap-stage:before{content:'';position:absolute;left:-29px;top:30px;width:9px;height:9px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 5px var(--bg)}
  .roadmap-stage h2{font-size:24px}.roadmap-season span{font-size:14px}.roadmap-stage-top{gap:8px}.roadmap-footnote{margin-left:32px}
 }
+
+/* Discussion threads under story ideas */
+.idea-comments{border-top:1px solid var(--line);margin-top:24px;padding-top:18px}
+.idea-comments summary{cursor:pointer;color:var(--lime);font-size:15px;font-weight:600;min-height:30px}
+.comment-count{display:inline-block;border:1px solid var(--line);border-radius:20px;padding:1px 8px;margin-left:7px;font-size:12px}
+.comment-list{margin-top:16px}
+.idea-comment{padding:16px 0;border-bottom:1px solid var(--line)}
+.idea-comment .idea-meta{margin-bottom:8px}
+.idea-comment p{margin:0 0 10px;font-size:14px}
+.idea-comment .delete-comment{background:none;border:0;padding:6px 0;cursor:pointer;font-size:12px}
+.idea-comments .comment-empty{font-size:14px;color:var(--muted)}
+.comment-form{margin-top:22px;gap:12px}
+.comment-form textarea{min-height:95px}
+.comment-form .button{justify-self:start;max-width:100%;white-space:normal}
+.idea-comments .form-error{color:#ffbdac;margin:0}
+.idea-comments .form-success{color:var(--lime);margin:0}

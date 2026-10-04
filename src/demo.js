@@ -25,11 +25,13 @@ const initial={
  {id:'lore-three',title:'Что осталось открытым',sort_order:3,content:'Непонятно, на чьей стороне Джорданио — или он вовсе играет в свою игру.'}
  ],
  ideas:[{id:'idea-one',user_id:ownerId,title:'Одиннадцать лет спустя',content:'Предлагаю начать финальную часть со встречи прежних героев. Каждый помнит прошлое по-своему — через их разговор постепенно узнаём, что произошло между фильмами.\n\nПример идеи для проверки страницы обсуждения.',created_at:fixed},{id:'idea-two',user_id:actorId,title:'Новый герой как точка входа',content:'Новый персонаж может познакомиться с прежней командой вместе со зрителем. Это поможет естественно напомнить события первых частей, без длинного вступления.\n\nТестовое предложение, не часть канона.',created_at:'2026-10-01T12:00:00Z'}],
+ idea_comments:[],
  applications:[{id:'app-one',user_id:actorId,city:'Новосибирск',participation:'returning',role_name:'Роль уточняется',experience:'Снимался в прошлой части. Это тестовая анкета, все сведения вымышлены.',availability:'Готов обсуждать съёмки по выходным.',contact:'Тестовый контакт — не настоящий',portfolio:'',status:'submitted',created_at:fixed},{id:'app-owner',user_id:ownerId,city:'',participation:'returning',role_name:'Фёдор',experience:'Играю Фёдора — члена банды Дона Потника.',availability:'',contact:'Тестовый контакт — не настоящий',portfolio:'',status:'accepted',created_at:fixed}]
 };
 const storageKey='final-chapter-front-demo-v2';
 let state=structuredClone(initial),role='guest';
 try{const saved=JSON.parse(localStorage.getItem(storageKey));if(saved?.data&&['guest','actor','organizer'].includes(saved.role)){state=saved.data;role=saved.role;}}catch{}
+state.idea_comments ||= [];
 // Refresh requested canonical demo content while keeping locally edited forms and ideas.
 try{
  const saved=JSON.parse(localStorage.getItem(storageKey));
@@ -72,7 +74,7 @@ class DemoQuery{
   let data=table.filter(matches);
   if(this.action==='insert'){const item={id:id(),created_at:new Date().toISOString(),...this.payload};if(this.table==='applications')item.status='submitted';table.push(item);data=[item];save();}
   if(this.action==='update'){data.forEach(item=>Object.assign(item,this.payload));save();}
-  if(this.action==='delete'){state[this.table]=table.filter(row=>!matches(row));data=[];save();}
+  if(this.action==='delete'){if(this.table==='ideas'){const removed=new Set(data.map(row=>row.id));state.idea_comments=state.idea_comments.filter(row=>!removed.has(row.idea_id));}state[this.table]=table.filter(row=>!matches(row));data=[];save();}
   data=data.map(row=>({...row}));
   if(this.columns?.includes('profiles('))data=data.map(row=>({...row,profiles:state.profiles.find(p=>p.id===row.user_id)}));
   if(this.sort){const {column,ascending}=this.sort;data.sort((a,b)=>a[column]>b[column]?(ascending?1:-1):a[column]<b[column]?(ascending?-1:1):0);}
