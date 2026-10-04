@@ -2,7 +2,7 @@
 const actorId='demo-actor',ownerId='demo-owner';
 const fixed='2026-10-02T12:00:00Z';
 const initial={
- character_assignments:[],notifications:[],
+ telegram_connections:[],character_assignments:[],notifications:[],
  profiles:[{id:actorId,display_name:'Алексей • тестовый актёр'},{id:ownerId,display_name:'Организатор проекта'},{id:'demo-two',display_name:'Мария • тестовый актёр'}],
  admin_users:[{user_id:ownerId}],
  cast_members:[{id:'cast-one',display_name:'Тестовый актёр 01',role_name:'Роль уточняется',participation:'returning',created_at:fixed},{id:'cast-two',display_name:'Тестовый актёр 02',role_name:'Роль уточняется',participation:'returning',created_at:fixed},{id:'cast-owner',user_id:ownerId,display_name:'Организатор проекта',role_name:'Фёдор',participation:'returning',created_at:fixed}],
@@ -33,6 +33,7 @@ const storageKey='final-chapter-front-demo-v2';
 let state=structuredClone(initial),role='guest';
 try{const saved=JSON.parse(localStorage.getItem(storageKey));if(saved?.data&&['guest','actor','organizer'].includes(saved.role)){state=saved.data;role=saved.role;}}catch{}
 state.idea_comments ||= [];
+state.telegram_connections ||= [];
 state.character_assignments ||= [];state.notifications ||= [];
 // Refresh requested canonical demo content while keeping locally edited forms and ideas.
 try{
@@ -103,6 +104,7 @@ export const demoClient={
  signOut:async()=>{setDemoRole('guest');return {error:null};}
  },
  rpc:async(name,{application_id,new_status,object_path,target_character,actor_user,details,title_text,message_text,recipient_user,notification_id})=>{
+  if(name==='disconnect_telegram'){state.telegram_connections=state.telegram_connections.filter(c=>c.user_id!==currentUser()?.id);save();return {data:null,error:null};}
   if(name==='read_notification'){const n=state.notifications.find(n=>n.id===notification_id&&n.recipient_id===currentUser()?.id);if(n)n.read_at ||=new Date().toISOString();save();return {data:null,error:null};}
   if(name==='edit_assigned_character'){
    const assigned=state.character_assignments.find(a=>a.character_id===target_character&&a.user_id===currentUser()?.id);if(!assigned)return {data:null,error:{code:'42501'}};
