@@ -87,3 +87,7 @@
 
 .avatar-form{margin:20px 0}.avatar-form input[type=file],.field input[type=file]{padding:10px;min-width:0;font-size:13px}
 .idea-media{display:grid;gap:14px;margin:18px 0}.idea-media:empty{display:none}.idea-media img{display:block;width:100%;max-height:360px;object-fit:contain;background:#121610;border-radius:8px}.idea-audio{display:grid;gap:8px;min-width:0}.idea-audio span{font-size:13px;color:var(--muted);overflow-wrap:anywhere}.idea-audio audio{width:100%;max-width:100%}
+
+.idea-edit{margin-top:22px;padding-top:22px;border-top:1px solid var(--line)}.idea-edit[hidden],.edit-idea[hidden]{display:none}.idea-edit h3{margin:0;font-size:19px}.idea-edit .idea-actions{margin-top:0;flex-wrap:wrap}.edit-attachments{border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0;display:grid;gap:12px}.edit-attachments legend{font-size:14px;color:var(--muted)}.edit-attachments .check span{overflow-wrap:anywhere}.idea-actions{flex-wrap:wrap}
+
+.idea-author{display:inline-flex;align-items:center;gap:8px;min-width:0}.idea-author .avatar{width:28px;height:28px;font-size:11px}.idea-author>span{overflow-wrap:anywhere}
