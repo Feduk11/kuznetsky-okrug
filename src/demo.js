@@ -2,6 +2,7 @@
 const actorId='demo-actor',ownerId='demo-owner';
 const fixed='2026-10-02T12:00:00Z';
 const initial={
+ character_assignments:[],notifications:[],
  profiles:[{id:actorId,display_name:'Алексей • тестовый актёр'},{id:ownerId,display_name:'Организатор проекта'},{id:'demo-two',display_name:'Мария • тестовый актёр'}],
  admin_users:[{user_id:ownerId}],
  cast_members:[{id:'cast-one',display_name:'Тестовый актёр 01',role_name:'Роль уточняется',participation:'returning',created_at:fixed},{id:'cast-two',display_name:'Тестовый актёр 02',role_name:'Роль уточняется',participation:'returning',created_at:fixed},{id:'cast-owner',user_id:ownerId,display_name:'Организатор проекта',role_name:'Фёдор',participation:'returning',created_at:fixed}],
@@ -32,6 +33,7 @@ const storageKey='final-chapter-front-demo-v2';
 let state=structuredClone(initial),role='guest';
 try{const saved=JSON.parse(localStorage.getItem(storageKey));if(saved?.data&&['guest','actor','organizer'].includes(saved.role)){state=saved.data;role=saved.role;}}catch{}
 state.idea_comments ||= [];
+state.character_assignments ||= [];state.notifications ||= [];
 // Refresh requested canonical demo content while keeping locally edited forms and ideas.
 try{
  const saved=JSON.parse(localStorage.getItem(storageKey));
@@ -70,7 +72,7 @@ class DemoQuery{
  delete(){this.action='delete';return this;}
  then(resolve,reject){return this.execute().then(resolve,reject);}
  async execute(){
-  const table=state[this.table]||[], matches=row=>this.filters.every(([key,value])=>row[key]===value);
+  const table=this.table==='character_actors'?state.character_assignments.map(a=>({character_id:a.character_id,display_name:state.profiles.find(p=>p.id===a.user_id)?.display_name||'Участник'})):state[this.table]||[], matches=row=>this.filters.every(([key,value])=>row[key]===value);
   let data=table.filter(matches);
   if(this.action==='insert'){const item={id:id(),created_at:new Date().toISOString(),...this.payload};if(this.table==='applications')item.status='submitted';table.push(item);data=[item];save();}
   if(this.action==='update'){
@@ -100,7 +102,21 @@ export const demoClient={
  onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),
  signOut:async()=>{setDemoRole('guest');return {error:null};}
  },
- rpc:async(name,{application_id,new_status,object_path})=>{
+ rpc:async(name,{application_id,new_status,object_path,target_character,actor_user,details,title_text,message_text,recipient_user,notification_id})=>{
+  if(name==='read_notification'){const n=state.notifications.find(n=>n.id===notification_id&&n.recipient_id===currentUser()?.id);if(n)n.read_at ||=new Date().toISOString();save();return {data:null,error:null};}
+  if(name==='edit_assigned_character'){
+   const assigned=state.character_assignments.find(a=>a.character_id===target_character&&a.user_id===currentUser()?.id);if(!assigned)return {data:null,error:{code:'42501'}};
+   const character=state.characters.find(c=>c.id===target_character);for(const key of ['name','description','personality','traits','relationships','history'])character[key]=details[key]||'';save();return {data:null,error:null};
+  }
+  if(name==='set_character_actor'){
+   if(role!=='organizer')return {data:null,error:{code:'42501'}};
+   if(actor_user&&!state.cast_members.some(c=>c.user_id===actor_user))return {data:null,error:{message:'Actor must be accepted'}};
+   state.character_assignments=state.character_assignments.filter(a=>a.character_id!==target_character);if(actor_user)state.character_assignments.push({character_id:target_character,user_id:actor_user,assigned_at:new Date().toISOString()});state.characters.find(c=>c.id===target_character).casting_status=actor_user?'cast':'open';save();return {data:null,error:null};
+  }
+  if(name==='send_notification'){
+   if(role!=='organizer')return {data:null,error:{code:'42501'}};
+   const recipients=state.profiles.filter(p=>!recipient_user||p.id===recipient_user);for(const p of recipients)state.notifications.push({id:id(),recipient_id:p.id,sender_id:ownerId,title:title_text,message:message_text,created_at:new Date().toISOString(),read_at:null});save();return {data:recipients.length,error:null};
+  }
   if(name==='set_avatar'){
    const uid=currentUser()?.id;if(!uid||!object_path.startsWith(uid+'/'))return {data:null,error:{code:'42501'}};
    state.profiles.find(p=>p.id===uid).avatar_path=object_path;
