@@ -11,6 +11,28 @@ const e = escape;
 const openCommentThreads = new Set();
 let notificationsOpen=false;
 const openAdminSections=new Set();
+const notificationDrafts=new Map();
+function notificationDraftKey(id){return 'final-chapter-notification-draft:'+id;}
+function saveNotificationDraft(form=document.querySelector('#notification-form')){
+  const id=form?.dataset.draftOwner;if(!id)return;
+  const draft=Object.fromEntries(['title_text','message_text','recipient_user'].map(name=>[name,form.elements.namedItem(name).value]));
+  const hasText=Boolean(draft.title_text||draft.message_text);
+  if(hasText)notificationDrafts.set(id,draft);else notificationDrafts.delete(id);
+  try{if(hasText)localStorage.setItem(notificationDraftKey(id),JSON.stringify(draft));else localStorage.removeItem(notificationDraftKey(id));}catch{}
+}
+function restoreNotificationDraft(form){
+  if(!user)return;
+  const id=user.id;form.dataset.draftOwner=id;
+  let draft=notificationDrafts.get(id);
+  if(!draft)try{draft=JSON.parse(localStorage.getItem(notificationDraftKey(id)));}catch{}
+  if(draft){for(const [name,max]of [['title_text',120],['message_text',5000],['recipient_user',200]]){
+    const input=form.elements.namedItem(name),value=draft[name];if(typeof value!=='string')continue;
+    if(name!=='recipient_user'||[...input.options].some(option=>option.value===value))input.value=value.slice(0,max);
+  }
+  if(form.elements.title_text.value||form.elements.message_text.value){const details=form.closest('.admin-spoiler');if(details){details.open=true;openAdminSections.add('admin-notifications');}}}
+  form.addEventListener('input',()=>saveNotificationDraft(form));
+  form.addEventListener('change',()=>saveNotificationDraft(form));
+}
 const statusLabels = {submitted:'На рассмотрении',accepted:'В составе',declined:'Не выбрана'};
 const navs = [['cast','Актёрский состав'],['ideas','Идеи сюжета'],['characters','Персонажи'],['roadmap','Дорожная карта'],['lore','Лор трилогии']];
 const route = () => location.hash.startsWith('#/') ? location.hash.slice(2).split('?')[0] || 'cast' : 'cast';
@@ -49,6 +71,7 @@ async function rows(table,order='created_at') {
 }
 function offline() { return !configured ? '<div class="notice">Вход пока не настроен. Организатор подключает аккаунты участников; попробуйте позже.</div>' : ''; }
 async function render() {
+  saveNotificationDraft();
   const current=++revision,page=route();frame(page);
   try {
     let html;
@@ -352,9 +375,9 @@ function wire(page){
       catch{document.querySelector('#telegram-admin-status').textContent='Не удалось выполнить действие. Проверьте Secrets и настройки Edge Functions.';}
       finally{button.disabled=false;}
     };}
-    const notification=document.querySelector('#notification-form');if(notification)notification.onsubmit=ev=>{ev.preventDefault();submit(notification,async data=>{const count=await query(db.rpc('send_notification',{title_text:data.title_text.trim(),message_text:data.message_text.trim(),recipient_user:data.recipient_user||null}));notification.reset();notification.querySelector('.form-success').textContent=`На сайте отправлено. Получателей: ${count}.`;
+    const notification=document.querySelector('#notification-form');if(notification){restoreNotificationDraft(notification);notification.onsubmit=ev=>{ev.preventDefault();submit(notification,async data=>{const count=await query(db.rpc('send_notification',{title_text:data.title_text.trim(),message_text:data.message_text.trim(),recipient_user:data.recipient_user||null}));notification.reset();saveNotificationDraft(notification);notification.querySelector('.form-success').textContent=`На сайте отправлено. Получателей: ${count}.`;
       if(!demoMode){try{const {data,error}=await db.functions.invoke('telegram-notifications',{body:{action:'dispatch'}});if(error)throw error;notification.querySelector('.form-success').textContent+=` Telegram: доставлено ${data.sent}, ошибок ${data.failed}, в очереди ${data.pending}.`;}
-      catch{notification.querySelector('.form-success').textContent+=' Telegram пока не отправлен. Проверьте настройки и нажмите «Повторить / дослать». Сообщение на сайте сохранено.';}}});};
+      catch{notification.querySelector('.form-success').textContent+=' Telegram пока не отправлен. Проверьте настройки и нажмите «Повторить / дослать». Сообщение на сайте сохранено.';}}});};}
 
     document.querySelectorAll('.review').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await query(db.rpc('review_application',{application_id:b.dataset.id,new_status:b.dataset.status}));toast('Статус изменён');render();}catch(err){toast(readableError(err));b.disabled=false;}});
     for(const [formId,table,editClass] of [['lore-form','lore_chapters','edit-lore'],['character-form','characters','edit-character']]){
@@ -370,9 +393,12 @@ let authTimer;
 if(db)db.auth.onAuthStateChange((event,session)=>{
   // Defer database calls outside the Supabase auth callback lock.
   if(event==='PASSWORD_RECOVERY'){location.hash='/reset';}
-  if(event==='SIGNED_OUT'){user=null;admin=false;profile=null;render();return;}
+  if(event==='SIGNED_OUT'){saveNotificationDraft();clearTimeout(authTimer);user=null;admin=false;profile=null;render();return;}
   if(event==='SIGNED_IN'||event==='USER_UPDATED'){
-    clearTimeout(authTimer);authTimer=setTimeout(async()=>{try{await loadIdentity();restoreSharedIdea();if(route()!=='reset')render();}catch(err){toast(readableError(err));}},0);
+    // Supabase also emits SIGNED_IN when an existing session is confirmed on tab focus.
+    // Redrawing for the same participant destroys in-progress forms unnecessarily.
+    if(event==='SIGNED_IN'&&session?.user?.id===user?.id)return;
+    clearTimeout(authTimer);authTimer=setTimeout(async()=>{try{if(event==='SIGNED_IN'&&session?.user?.id===user?.id)return;saveNotificationDraft();await loadIdentity();restoreSharedIdea();if(route()!=='reset')render();}catch(err){toast(readableError(err));}},0);
   }
 });
 try{await loadIdentity();restoreSharedIdea();}catch(err){toast(readableError(err));}
