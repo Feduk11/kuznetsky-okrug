@@ -2,7 +2,7 @@
 const actorId='demo-actor',ownerId='demo-owner';
 const fixed='2026-10-02T12:00:00Z';
 const initial={
- telegram_connections:[],character_assignments:[],notifications:[],
+ telegram_connections:[],character_assignments:[],notifications:[],site_feedback:[],
  profiles:[{id:actorId,display_name:'Алексей • тестовый актёр'},{id:ownerId,display_name:'Организатор проекта'},{id:'demo-two',display_name:'Мария • тестовый актёр'}],
  admin_users:[{user_id:ownerId}],
  cast_members:[{id:'cast-one',display_name:'Тестовый актёр 01',role_name:'Роль уточняется',participation:'returning',created_at:fixed},{id:'cast-two',display_name:'Тестовый актёр 02',role_name:'Роль уточняется',participation:'returning',created_at:fixed},{id:'cast-owner',user_id:ownerId,display_name:'Организатор проекта',role_name:'Фёдор',participation:'returning',created_at:fixed}],
@@ -75,7 +75,8 @@ class DemoQuery{
  async execute(){
   const table=this.table==='character_actors'?state.character_assignments.map(a=>({character_id:a.character_id,display_name:state.profiles.find(p=>p.id===a.user_id)?.display_name||'Участник'})):state[this.table]||[], matches=row=>this.filters.every(([key,value])=>row[key]===value);
   let data=table.filter(matches);
-  if(this.action==='insert'){const item={id:id(),created_at:new Date().toISOString(),...this.payload};if(this.table==='applications')item.status='submitted';table.push(item);data=[item];save();}
+  if(this.table==='site_feedback'&&role!=='organizer')data=data.filter(item=>item.sender_id===currentUser()?.id);
+  if(this.action==='insert'){const item={id:id(),created_at:new Date().toISOString(),...this.payload};if(this.table==='applications')item.status='submitted';if(this.table==='site_feedback'){if(!currentUser())return {data:null,error:{code:'42501'}};item.sender_id=currentUser().id;item.read_at=null;}table.push(item);data=[item];save();}
   if(this.action==='update'){
    data.forEach(item=>Object.assign(item,this.payload));
    for(const item of data){const cast=state.cast_members.find(c=>c.user_id===(this.table==='profiles'?item.id:item.user_id));if(cast&&this.table==='profiles')cast.display_name=item.display_name;if(cast&&this.table==='applications'&&item.status==='accepted'){cast.role_name=item.role_name;cast.participation=item.participation;}}
@@ -83,7 +84,7 @@ class DemoQuery{
   }
   if(this.action==='delete'){if(this.table==='ideas'){const removed=new Set(data.map(row=>row.id));state.idea_comments=state.idea_comments.filter(row=>!removed.has(row.idea_id));}state[this.table]=table.filter(row=>!matches(row));data=[];save();}
   data=data.map(row=>({...row}));
-  if(this.publicProjection||this.columns?.includes('profiles('))data=data.map(row=>({...row,profiles:state.profiles.find(p=>p.id===row.user_id)}));
+  if(this.publicProjection||this.columns?.includes('profiles('))data=data.map(row=>({...row,profiles:state.profiles.find(p=>p.id===(row.sender_id||row.user_id))}));
   if(this.sort){const {column,ascending}=this.sort;data.sort((a,b)=>a[column]>b[column]?(ascending?1:-1):a[column]<b[column]?(ascending?-1:1):0);}
   return {data:this.isSingle?(data[0]||null):data,error:null};
  }
@@ -103,7 +104,8 @@ export const demoClient={
  onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),
  signOut:async()=>{setDemoRole('guest');return {error:null};}
  },
- rpc:async(name,{application_id,new_status,object_path,target_character,actor_user,details,title_text,message_text,recipient_user,notification_id})=>{
+ rpc:async(name,{feedback_id,application_id,new_status,object_path,target_character,actor_user,details,title_text,message_text,recipient_user,notification_id})=>{
+  if(name==='read_site_feedback'){if(role!=='organizer')return {error:{code:'42501'}};const item=state.site_feedback.find(f=>f.id===feedback_id);if(item)item.read_at ||=new Date().toISOString();save();return {data:null,error:null};}
   if(name==='disconnect_telegram'){state.telegram_connections=state.telegram_connections.filter(c=>c.user_id!==currentUser()?.id);save();return {data:null,error:null};}
   if(name==='read_notification'){const n=state.notifications.find(n=>n.id===notification_id&&n.recipient_id===currentUser()?.id);if(n)n.read_at ||=new Date().toISOString();save();return {data:null,error:null};}
   if(name==='edit_assigned_character'){

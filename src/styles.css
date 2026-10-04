@@ -109,3 +109,10 @@
 
 .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.profile-main{min-width:0}.cast-join>summary{display:none}.cast-join-body{min-width:0}
 @media(max-width:720px){.metrics{grid-template-columns:1fr}.ideas-heading.ideas-signed-in>div>p{display:none}.cast-join>summary{display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:20px;font-weight:600;list-style:none;min-height:42px}.cast-join>summary::-webkit-details-marker{display:none}.cast-join>summary::after{content:'＋';color:var(--lime);font-size:25px}.cast-join[open]>summary::after{content:'−'}.cast-join-body{padding-top:18px}.cast-join .aside-title h2{display:none}.profile-main .profile-characters{margin-top:22px}}
+
+/* Private participant feedback */
+.feedback-panel{margin-top:24px}
+.feedback-panel summary{font-weight:600;cursor:pointer}
+.feedback-body{padding-top:20px}
+.feedback-history{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.feedback-body .notification-message,.admin-block .notification-message{overflow-wrap:anywhere}
