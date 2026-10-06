@@ -104,7 +104,8 @@ export const demoClient={
  onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),
  signOut:async()=>{setDemoRole('guest');return {error:null};}
  },
- rpc:async(name,{target_idea,should_like,feedback_id,application_id,new_status,object_path,target_character,actor_user,details,title_text,message_text,recipient_user,notification_id}={})=>{
+ rpc:async(name,{idea_uuid,review_status,pin_idea,target_idea,should_like,feedback_id,application_id,new_status,object_path,target_character,actor_user,details,title_text,message_text,recipient_user,notification_id}={})=>{
+  if(name==='set_idea_review'){if(role!=='organizer')return {error:{code:'42501'}};const idea=state.ideas.find(i=>i.id===idea_uuid);if(!idea)return {error:{message:'Idea not found'}};idea.story_status=review_status;idea.is_pinned=pin_idea;save();return {data:null,error:null};}
   if(name==='get_idea_likes')return {data:state.ideas.map(idea=>({idea_id:idea.id,like_count:state.idea_likes.filter(l=>l.idea_id===idea.id).length,liked:state.idea_likes.some(l=>l.idea_id===idea.id&&l.user_id===currentUser()?.id)})),error:null};
   if(name==='set_idea_like'){
    const actor=currentUser();if(!actor)return {data:null,error:{code:'42501'}};
