@@ -116,3 +116,10 @@
 .feedback-body{padding-top:20px}
 .feedback-history{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
 .feedback-body .notification-message,.admin-block .notification-message{overflow-wrap:anywhere}
+
+/* Idea likes: update in place so comment drafts stay intact. */
+.idea-like{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:42px;min-width:58px;padding:9px;white-space:nowrap}
+.idea-like svg{width:20px;height:20px;flex-shrink:0}
+.idea-like[aria-pressed="true"]{color:var(--lime);border-color:var(--lime);background:#26351a}
+.idea-like[aria-pressed="true"] svg{fill:currentColor;fill-opacity:.16}
+@media(max-width:480px){.idea-toolbar .share-toggle{width:42px;min-width:42px;padding:9px;justify-content:center}.idea-toolbar .share-toggle span{display:none}}

@@ -2,7 +2,7 @@
 const actorId='demo-actor',ownerId='demo-owner';
 const fixed='2026-10-02T12:00:00Z';
 const initial={
- telegram_connections:[],character_assignments:[],notifications:[],site_feedback:[],
+ telegram_connections:[],character_assignments:[],notifications:[],site_feedback:[],idea_likes:[],
  profiles:[{id:actorId,display_name:'Алексей • тестовый актёр'},{id:ownerId,display_name:'Организатор проекта'},{id:'demo-two',display_name:'Мария • тестовый актёр'}],
  admin_users:[{user_id:ownerId}],
  cast_members:[{id:'cast-one',display_name:'Тестовый актёр 01',role_name:'Роль уточняется',participation:'returning',created_at:fixed},{id:'cast-two',display_name:'Тестовый актёр 02',role_name:'Роль уточняется',participation:'returning',created_at:fixed},{id:'cast-owner',user_id:ownerId,display_name:'Организатор проекта',role_name:'Фёдор',participation:'returning',created_at:fixed}],
@@ -82,7 +82,7 @@ class DemoQuery{
    for(const item of data){const cast=state.cast_members.find(c=>c.user_id===(this.table==='profiles'?item.id:item.user_id));if(cast&&this.table==='profiles')cast.display_name=item.display_name;if(cast&&this.table==='applications'&&item.status==='accepted'){cast.role_name=item.role_name;cast.participation=item.participation;}}
    save();
   }
-  if(this.action==='delete'){if(this.table==='ideas'){const removed=new Set(data.map(row=>row.id));state.idea_comments=state.idea_comments.filter(row=>!removed.has(row.idea_id));}state[this.table]=table.filter(row=>!matches(row));data=[];save();}
+  if(this.action==='delete'){if(this.table==='ideas'){const removed=new Set(data.map(row=>row.id));state.idea_comments=state.idea_comments.filter(row=>!removed.has(row.idea_id));state.idea_likes=state.idea_likes.filter(row=>!removed.has(row.idea_id));}state[this.table]=table.filter(row=>!matches(row));data=[];save();}
   data=data.map(row=>({...row}));
   if(this.publicProjection||this.columns?.includes('profiles('))data=data.map(row=>({...row,profiles:state.profiles.find(p=>p.id===(row.sender_id||row.user_id))}));
   if(this.sort){const {column,ascending}=this.sort;data.sort((a,b)=>a[column]>b[column]?(ascending?1:-1):a[column]<b[column]?(ascending?-1:1):0);}
@@ -104,7 +104,15 @@ export const demoClient={
  onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}}),
  signOut:async()=>{setDemoRole('guest');return {error:null};}
  },
- rpc:async(name,{feedback_id,application_id,new_status,object_path,target_character,actor_user,details,title_text,message_text,recipient_user,notification_id})=>{
+ rpc:async(name,{target_idea,should_like,feedback_id,application_id,new_status,object_path,target_character,actor_user,details,title_text,message_text,recipient_user,notification_id}={})=>{
+  if(name==='get_idea_likes')return {data:state.ideas.map(idea=>({idea_id:idea.id,like_count:state.idea_likes.filter(l=>l.idea_id===idea.id).length,liked:state.idea_likes.some(l=>l.idea_id===idea.id&&l.user_id===currentUser()?.id)})),error:null};
+  if(name==='set_idea_like'){
+   const actor=currentUser();if(!actor)return {data:null,error:{code:'42501'}};
+   if(!state.ideas.some(idea=>idea.id===target_idea))return {data:null,error:{message:'Idea not found'}};
+   state.idea_likes=state.idea_likes.filter(l=>!(l.idea_id===target_idea&&l.user_id===actor.id));
+   if(should_like)state.idea_likes.push({idea_id:target_idea,user_id:actor.id});save();
+   return {data:[{idea_id:target_idea,like_count:state.idea_likes.filter(l=>l.idea_id===target_idea).length,liked:should_like}],error:null};
+  }
   if(name==='read_site_feedback'){if(role!=='organizer')return {error:{code:'42501'}};const item=state.site_feedback.find(f=>f.id===feedback_id);if(item)item.read_at ||=new Date().toISOString();save();return {data:null,error:null};}
   if(name==='disconnect_telegram'){state.telegram_connections=state.telegram_connections.filter(c=>c.user_id!==currentUser()?.id);save();return {data:null,error:null};}
   if(name==='read_notification'){const n=state.notifications.find(n=>n.id===notification_id&&n.recipient_id===currentUser()?.id);if(n)n.read_at ||=new Date().toISOString();save();return {data:null,error:null};}
