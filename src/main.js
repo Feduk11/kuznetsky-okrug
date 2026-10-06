@@ -147,8 +147,8 @@ async function ideasPage() {
   if(!db)return html+offline()+empty('Идеи скоро появятся','Организатор подключает базу сайта.');
   if(!user)rememberSharedIdea();
   const [ideas,comments,likeStats]=await Promise.all([
-    query(db.from(user?'ideas':'public_ideas').select(user?'*, profiles(display_name,avatar_url,avatar_path)':'*').order('created_at',{ascending:false})),
-    query(db.from(user?'idea_comments':'public_idea_comments').select(user?'*, profiles(display_name,avatar_url,avatar_path)':'*').order('created_at',{ascending:true})),
+    query(db.from(user?'ideas':'public_ideas').select(user?'*, profiles!ideas_user_id_fkey(display_name,avatar_url,avatar_path)':'*').order('created_at',{ascending:false})),
+    query(db.from(user?'idea_comments':'public_idea_comments').select(user?'*, profiles!idea_comments_user_id_fkey(display_name,avatar_url,avatar_path)':'*').order('created_at',{ascending:true})),
     query(db.rpc('get_idea_likes')).catch(()=>null)
   ]);
   const likesByIdea=new Map((likeStats||[]).map(item=>[item.idea_id,item]));

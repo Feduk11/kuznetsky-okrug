@@ -84,7 +84,7 @@ class DemoQuery{
   }
   if(this.action==='delete'){if(this.table==='ideas'){const removed=new Set(data.map(row=>row.id));state.idea_comments=state.idea_comments.filter(row=>!removed.has(row.idea_id));state.idea_likes=state.idea_likes.filter(row=>!removed.has(row.idea_id));}state[this.table]=table.filter(row=>!matches(row));data=[];save();}
   data=data.map(row=>({...row}));
-  if(this.publicProjection||this.columns?.includes('profiles('))data=data.map(row=>({...row,profiles:state.profiles.find(p=>p.id===(row.sender_id||row.user_id))}));
+  if(this.publicProjection||/profiles(?:![^(]+)?\(/.test(this.columns||''))data=data.map(row=>({...row,profiles:state.profiles.find(p=>p.id===(row.sender_id||row.user_id))}));
   if(this.sort){const {column,ascending}=this.sort;data.sort((a,b)=>a[column]>b[column]?(ascending?1:-1):a[column]<b[column]?(ascending?-1:1):0);}
   return {data:this.isSingle?(data[0]||null):data,error:null};
  }
